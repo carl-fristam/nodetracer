@@ -173,3 +173,27 @@ def test_render_trace_full_truncates_large_data() -> None:
     output = render_trace(trace, verbosity="full")
     assert "[truncated]" in output
     assert "x" * 300 not in output
+
+
+def test_render_trace_color_styles_failed_node_red() -> None:
+    trace = TraceGraph(
+        name="run",
+        start_time=datetime(2026, 1, 1, tzinfo=UTC),
+        end_time=datetime(2026, 1, 1, second=1, tzinfo=UTC),
+    )
+    failed = Node(
+        sequence_number=0,
+        name="boom",
+        node_type="tool_call",
+        status=NodeStatus.FAILED,
+        start_time=datetime(2026, 1, 1, tzinfo=UTC),
+        end_time=datetime(2026, 1, 1, second=1, tzinfo=UTC),
+    )
+    trace.add_node(failed)
+
+    plain = render_trace(trace, verbosity="minimal", color=False)
+    colored = render_trace(trace, verbosity="minimal", color=True)
+
+    assert "\x1b[" not in plain
+    assert "\x1b[31m✗" in colored
+    assert "\x1b[0m" in colored

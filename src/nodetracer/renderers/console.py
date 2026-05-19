@@ -8,6 +8,7 @@ from io import StringIO
 from typing import Literal
 
 from rich.console import Console
+from rich.text import Text
 from rich.tree import Tree
 
 from ..models import EdgeType, Node, NodeStatus, TraceGraph
@@ -15,8 +16,21 @@ from ..models import EdgeType, Node, NodeStatus, TraceGraph
 Verbosity = Literal["minimal", "standard", "full"]
 _MAX_VALUE_LEN = 200
 
+_STATUS_STYLES: dict[NodeStatus, str] = {
+    NodeStatus.COMPLETED: "green",
+    NodeStatus.FAILED: "red",
+    NodeStatus.CANCELLED: "yellow",
+    NodeStatus.RUNNING: "cyan",
+    NodeStatus.PENDING: "dim",
+}
 
-def render_trace(trace: TraceGraph, *, verbosity: Verbosity = "standard") -> str:
+
+def render_trace(
+    trace: TraceGraph,
+    *,
+    verbosity: Verbosity = "standard",
+    color: bool = False,
+) -> str:
     tree = Tree(_trace_label(trace))
     children_by_parent: dict[str | None, list[Node]] = defaultdict(list)
     for node in trace.nodes.values():
@@ -30,9 +44,17 @@ def render_trace(trace: TraceGraph, *, verbosity: Verbosity = "standard") -> str
     for root in children_by_parent[None]:
         _add_node_branch(tree, root, children_by_parent, edges_by_source, trace, verbosity)
 
-    console = Console(record=True, width=120, markup=False, file=StringIO())
+    # Rich strips styles when writing to a non-terminal file (e.g. StringIO),
+    # so force_terminal + export_text(styles=...) are both required to emit ANSI.
+    console = Console(
+        record=True,
+        width=120,
+        markup=False,
+        force_terminal=color,
+        file=StringIO(),
+    )
     console.print(tree)
-    return console.export_text()
+    return console.export_text(styles=color)
 
 
 def _build_edge_labels(trace: TraceGraph) -> dict[str, list[str]]:
@@ -77,10 +99,11 @@ def _add_node_branch(
 ) -> None:
     icon = _status_icon(node.status)
     timing = _format_timing(node, trace)
-    line = f"[{node.node_type}] {node.name} {timing} {icon}"
+    line = Text(f"[{node.node_type}] {node.name} {timing} ")
+    line.append(icon)
     edge_labels = edges_by_source.get(node.id, [])
     if edge_labels:
-        line += " " + " ".join(edge_labels)
+        line.append(" " + " ".join(edge_labels))
     branch = parent_tree.add(line)
 
     if verbosity == "minimal":
@@ -139,13 +162,14 @@ def _format_data(data: dict[str, object]) -> str:
     return s[:_MAX_VALUE_LEN] + "... [truncated]"
 
 
-def _status_icon(status: NodeStatus) -> str:
-    if status == NodeStatus.COMPLETED:
-        return "✓"
-    if status == NodeStatus.FAILED:
-        return "✗"
-    if status == NodeStatus.CANCELLED:
-        return "⊘"
-    if status == NodeStatus.RUNNING:
-        return "…"
-    return "·"
+def _status_icon(status: NodeStatus) -> Text:
+    glyphs: dict[NodeStatus, str] = {
+        NodeStatus.COMPLETED: "✓",
+        NodeStatus.FAILED: "✗",
+        NodeStatus.CANCELLED: "⊘",
+        NodeStatus.RUNNING: "…",
+        NodeStatus.PENDING: "·",
+    }
+    glyph = glyphs.get(status, "·")
+    style = _STATUS_STYLES.get(status, "")
+    return Text(glyph, style=style)
