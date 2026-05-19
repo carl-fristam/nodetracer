@@ -33,6 +33,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Optional output file path for --json summary",
     )
+    inspect_parser.add_argument(
+        "--summary",
+        action="store_true",
+        help="Print only the summary header (skip the rendered tree)",
+    )
 
     view_parser = subparsers.add_parser("view", help="Start trace API server for the web viewer")
     view_parser.add_argument("directory", type=Path, help="Directory containing trace JSON files")
@@ -60,6 +65,7 @@ def main(argv: list[str] | None = None) -> int:
             cast(VerbosityArg, args.verbosity),
             as_json=args.json,
             output_path=args.output,
+            summary_only=args.summary,
         )
 
     if args.command == "view":

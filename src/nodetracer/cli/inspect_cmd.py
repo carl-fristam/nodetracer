@@ -6,7 +6,7 @@ import json
 import sys
 from collections import Counter
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 from ..exceptions import NodetracerLoadError
 from ..models import NodeStatus, TraceGraph
@@ -22,6 +22,7 @@ def run_inspect(
     *,
     as_json: bool,
     output_path: Path | None,
+    summary_only: bool = False,
 ) -> int:
     if output_path is not None and not as_json:
         raise ValueError("--output is only supported when --json is provided")
@@ -48,25 +49,44 @@ def run_inspect(
             print(payload)
         return 0
 
-    status_counts = Counter(node.status for node in trace.nodes.values())
-    type_counts = Counter(node.node_type for node in trace.nodes.values())
-    duration = f"{trace.duration_ms:.0f}ms" if trace.duration_ms is not None else "unknown"
+    _print_text_summary(summary)
 
-    print(f"Trace ID: {trace.trace_id}")
-    print(f"Name: {trace.name or '<unnamed>'}")
-    print(f"Schema: {trace.schema_version}")
-    print(f"Duration: {duration}")
-    print(f"Nodes: {len(trace.nodes)}")
-    print(f"Edges: {len(trace.edges)}")
-    print("Status counts:")
-    for status, count in sorted(status_counts.items(), key=lambda item: item[0].value):
-        print(f"  - {status.value}: {count}")
-    print("Node type counts:")
-    for node_type, count in sorted(type_counts.items(), key=lambda item: item[0]):
-        print(f"  - {node_type}: {count}")
-    print()
-    print(render_trace(trace, verbosity=verbosity))
+    if not summary_only:
+        print()
+        print(render_trace(trace, verbosity=verbosity, color=sys.stdout.isatty()))
     return 0
+
+
+def _print_text_summary(summary: dict[str, object]) -> None:
+    """Render the summary dict as the human-readable header.
+
+    Shares its source of truth with the --json payload so the two
+    representations cannot drift apart.
+    """
+    duration_ms = summary["duration_ms"]
+    duration = f"{duration_ms:.0f}ms" if isinstance(duration_ms, float) else "unknown"
+
+    print(f"Trace ID: {summary['trace_id']}")
+    print(f"Name: {summary['name'] or '<unnamed>'}")
+    print(f"Schema: {summary['schema_version']}")
+    print(f"Duration: {duration}")
+    print(f"Nodes: {summary['node_count']}")
+    print(f"Edges: {summary['edge_count']}")
+
+    status_counts = cast(dict[str, int], summary["status_counts"])
+    print("Status counts:")
+    for status_name in sorted(status_counts):
+        count = status_counts[status_name]
+        # _build_summary returns all statuses (incl. zeros) for stable JSON shape;
+        # human-readable output skips zeros to match prior behavior.
+        if count == 0:
+            continue
+        print(f"  - {status_name}: {count}")
+
+    type_counts = cast(dict[str, int], summary["node_type_counts"])
+    print("Node type counts:")
+    for node_type, count in type_counts.items():
+        print(f"  - {node_type}: {count}")
 
 
 def _build_summary(trace: TraceGraph) -> dict[str, object]:

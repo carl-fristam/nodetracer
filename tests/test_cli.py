@@ -81,3 +81,17 @@ def test_cli_output_without_json_raises_error(tmp_path: Path) -> None:
     trace_file = _create_trace_file(tmp_path)
     with pytest.raises(ValueError, match="--output is only supported when --json is provided"):
         main(["inspect", str(trace_file), "--output", str(tmp_path / "summary.json")])
+
+
+def test_cli_inspect_summary_skips_tree(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    trace_file = _create_trace_file(tmp_path)
+    exit_code = main(["inspect", str(trace_file), "--summary"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "Trace ID:" in captured.out
+    assert "Nodes: 2" in captured.out
+    assert "Trace: cli_test" not in captured.out
