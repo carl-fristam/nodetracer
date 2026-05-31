@@ -48,6 +48,9 @@ http = [
   "httpx>=0.24",
   "aiohttp>=3.8",
 ]
+langchain = [
+  "langchain-core>=0.3",
+]
 
 [dependency-groups]
 dev = [
