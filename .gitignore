@@ -27,6 +27,7 @@ eggs/
 .eggs/
 lib/
 lib64/
+!viewer/src/lib/
 parts/
 sdist/
 var/
@@ -216,3 +217,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Temporary docs
+ADAPTER_NOTES.md
+DESIGN_DECISIONS.md
