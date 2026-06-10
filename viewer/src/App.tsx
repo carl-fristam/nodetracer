@@ -2,36 +2,36 @@ import { useCallback, useMemo, useState } from "react";
 import { useTraceList, useTrace, useMultiTrace } from "./hooks/useTraces";
 import { TraceList } from "./components/TraceList";
 import { TraceTree } from "./components/TraceTree";
-import { TraceTimeline } from "./components/TraceTimeline";
 import { TraceGraph } from "./components/TraceGraph";
 import { ViewToggle, type ViewMode } from "./components/ViewToggle";
 import { NodeDetail } from "./components/NodeDetail";
-import { mergeTraces, type TraceOriginMap } from "./lib/merge";
+import { mergeTraces } from "./lib/merge";
+import { Theme } from "@radix-ui/themes";
 import "./App.css";
 
-export type TimeMode = "absolute" | "normalized";
+export type AppTheme = "dark" | "light";
 
 export default function App() {
   const { traces, error: listError, newCount, clearNewCount } = useTraceList();
   const [selectedTraceIds, setSelectedTraceIds] = useState<Set<string>>(new Set());
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("tree");
-  const [timeMode, setTimeMode] = useState<TimeMode>("absolute");
+  const [theme, setTheme] = useState<AppTheme>("dark");
 
   const selectedArray = useMemo(() => [...selectedTraceIds], [selectedTraceIds]);
   const primaryTraceId = selectedArray[0] ?? null;
 
-  const usesMultiData = viewMode === "timeline" || viewMode === "graph";
+  const isMultiSelected = selectedArray.length > 1;
 
   const { trace: singleTrace, loading: singleLoading, error: singleError } = useTrace(
-    !usesMultiData ? primaryTraceId : null,
+    isMultiSelected ? null : primaryTraceId,
   );
 
   const {
     traces: multiTraces,
     loading: multiLoading,
     error: multiError,
-  } = useMultiTrace(usesMultiData ? selectedArray : []);
+  } = useMultiTrace(isMultiSelected ? selectedArray : []);
 
   const { merged, origins } = useMemo<{
     merged: ReturnType<typeof mergeTraces>["merged"] | null;
@@ -40,9 +40,9 @@ export default function App() {
     if (multiTraces.length === 0) return { merged: null, origins: null };
     if (multiTraces.length === 1)
       return { merged: multiTraces[0], origins: null };
-    const result = mergeTraces(multiTraces, timeMode);
+    const result = mergeTraces(multiTraces, "absolute");
     return result;
-  }, [multiTraces, timeMode]);
+  }, [multiTraces]);
 
   const handleSelect = useCallback((id: string) => {
     setSelectedTraceIds(new Set([id]));
@@ -69,11 +69,11 @@ export default function App() {
     clearNewCount();
   }, [clearNewCount]);
 
-  const isMulti = selectedTraceIds.size > 1;
+  const isMulti = isMultiSelected;
 
-  const activeTrace = usesMultiData ? merged : singleTrace;
-  const loading = usesMultiData ? multiLoading : singleLoading;
-  const traceError = usesMultiData ? multiError : singleError;
+  const activeTrace = isMultiSelected ? merged : singleTrace;
+  const loading = isMultiSelected ? multiLoading : singleLoading;
+  const traceError = isMultiSelected ? multiError : singleError;
 
   const totalNodes = activeTrace ? Object.keys(activeTrace.nodes).length : 0;
   const selectedNode = activeTrace && selectedNodeId
@@ -81,7 +81,13 @@ export default function App() {
     : null;
 
   return (
-    <div className="app">
+    <Theme
+      className="app"
+      accentColor="indigo"
+      grayColor="slate"
+      appearance={theme}
+      hasBackground={false}
+    >
       <TraceList
         traces={traces}
         selectedIds={selectedTraceIds}
@@ -90,7 +96,9 @@ export default function App() {
         onSelectSession={handleSelectSession}
         newCount={newCount}
         onClearNew={clearNewCount}
-        multiSelect={usesMultiData}
+        multiSelect={isMulti}
+        theme={theme}
+        onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
       />
 
       <main className="main-panel">
@@ -123,23 +131,13 @@ export default function App() {
               />
             )}
 
-            {viewMode === "timeline" && (
-              <TraceTimeline
-                trace={activeTrace}
-                selectedNodeId={selectedNodeId}
-                onSelectNode={setSelectedNodeId}
-                origins={origins}
-                timeMode={timeMode}
-                onTimeModeChange={isMulti ? setTimeMode : undefined}
-              />
-            )}
-
             {viewMode === "graph" && (
               <TraceGraph
                 trace={activeTrace}
                 selectedNodeId={selectedNodeId}
                 onSelectNode={setSelectedNodeId}
                 origins={origins}
+                colorMode={theme}
               />
             )}
           </>
@@ -153,6 +151,6 @@ export default function App() {
           onClose={() => setSelectedNodeId(null)}
         />
       )}
-    </div>
+    </Theme>
   );
 }

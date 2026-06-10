@@ -1,20 +1,27 @@
 :root {
+  /* Fallback for body bg before Radix hydrates */
   --bg-primary: #0f1117;
-  --bg-secondary: #161922;
-  --bg-tertiary: #1c1f2e;
-  --bg-hover: #232738;
-  --bg-selected: #2a2f45;
-  --border: #2a2f3e;
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent: #6366f1;
-  --green: #22c55e;
-  --red: #ef4444;
-  --yellow: #eab308;
   --sidebar-width: 280px;
   --detail-width: 380px;
   --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+}
+
+/* Map app variables to Radix adaptive tokens.
+   Radix's Theme component switches these automatically on appearance change. */
+.radix-themes {
+  --bg-primary: var(--color-background);
+  --bg-secondary: var(--gray-2);
+  --bg-tertiary: var(--gray-3);
+  --bg-hover: var(--gray-4);
+  --bg-selected: var(--accent-3);
+  --border: var(--gray-6);
+  --text-primary: var(--gray-12);
+  --text-secondary: var(--gray-11);
+  --text-muted: var(--gray-9);
+  --accent: var(--accent-9);
+  --green: var(--green-9);
+  --red: var(--red-9);
+  --yellow: var(--amber-9);
 }
 
 * {
@@ -22,6 +29,7 @@
   padding: 0;
   box-sizing: border-box;
 }
+
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -34,6 +42,9 @@ body {
   display: flex;
   height: 100vh;
   overflow: hidden;
+  padding: 8px;
+  gap: 8px;
+  background: var(--bg-primary);
 }
 
 /* Sidebar — Trace List */
@@ -41,10 +52,12 @@ body {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
   background: var(--bg-secondary);
-  border-right: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
 
 .trace-list-header {
@@ -61,6 +74,24 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-secondary);
+}
+
+.theme-toggle {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.theme-toggle:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .new-badge {
@@ -271,7 +302,6 @@ body {
 /* Main Panel Header (shared between tree and timeline) */
 .main-panel-header {
   padding: 12px 20px;
-  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -303,26 +333,32 @@ body {
 /* View Toggle */
 .view-toggle {
   display: flex;
+  align-items: center;
   background: var(--bg-tertiary);
-  border-radius: 6px;
-  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
   flex-shrink: 0;
 }
 
 .view-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  padding: 4px 12px;
-  border-radius: 4px;
+  padding: 5px 12px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s, background 0.15s, text-shadow 0.15s;
 }
 
-.view-toggle-btn:hover {
-  color: var(--text-secondary);
+.view-toggle-btn:hover:not(.active) {
+  color: var(--text-primary);
 }
 
 .view-toggle-btn.active {
@@ -354,7 +390,7 @@ body {
 .tree-children {
   padding-left: 20px;
   border-left: 1px solid var(--border);
-  margin-left: 10px;
+  margin-left: 16px;
 }
 
 .tree-node-row {
@@ -379,13 +415,30 @@ body {
 
 .expand-toggle {
   background: none;
-  border: none;
+  border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 13px;
+  line-height: 1;
   cursor: pointer;
   width: 16px;
-  text-align: center;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  transform: rotate(0deg);
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+
+.expand-toggle.expanded {
+  transform: rotate(90deg);
+}
+
+.expand-toggle:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .expand-placeholder {
@@ -437,10 +490,12 @@ body {
   width: var(--detail-width);
   min-width: var(--detail-width);
   background: var(--bg-secondary);
-  border-left: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
 
 .detail-header {
@@ -834,11 +889,11 @@ body {
   font-size: 14px;
 }
 
-/* React Flow dark theme overrides */
+/* React Flow theme overrides */
 .trace-graph .react-flow {
   --xy-background-color: var(--bg-primary);
   --xy-node-border-radius: 8px;
-  --xy-edge-stroke-default: #475569;
+  --xy-edge-stroke-default: var(--border);
 }
 
 .trace-graph .react-flow__background {
@@ -858,11 +913,11 @@ body {
 }
 
 .graph-node.selected {
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 0 2px var(--accent-a5);
 }
 
 .graph-node.failed {
-  background: rgba(239, 68, 68, 0.05);
+  background: var(--red-a2);
   border-color: var(--red);
 }
 
@@ -982,5 +1037,6 @@ body {
 }
 
 .graph-minimap .react-flow__minimap-mask {
-  fill: rgba(15, 17, 23, 0.7) !important;
+  fill: var(--bg-primary) !important;
+  opacity: 0.75 !important;
 }

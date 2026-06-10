@@ -26,12 +26,13 @@ interface Props {
   selectedNodeId: string | null;
   onSelectNode: (nodeId: string) => void;
   origins?: TraceOriginMap | null;
+  colorMode?: "dark" | "light";
 }
 
 const nodeTypes = { graphNode: GraphNode };
 const edgeTypes = { graphEdge: GraphEdge };
 
-function TraceGraphInner({ trace, selectedNodeId, onSelectNode }: Props) {
+function TraceGraphInner({ trace, selectedNodeId, onSelectNode, colorMode = "dark" }: Props) {
   const { fitView } = useReactFlow();
 
   const { initialNodes, initialEdges } = useMemo(() => {
@@ -90,10 +91,15 @@ function TraceGraphInner({ trace, selectedNodeId, onSelectNode }: Props) {
         nodesDraggable={true}
         nodesConnectable={false}
         elementsSelectable={true}
-        colorMode="dark"
+        colorMode={colorMode}
         proOptions={{ hideAttribution: true }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#1e293b" />
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={20}
+          size={1}
+          color={colorMode === "dark" ? "#1e293b" : "#cbd5e1"}
+        />
         <Controls
           showInteractive={false}
           className="graph-controls"
@@ -101,9 +107,8 @@ function TraceGraphInner({ trace, selectedNodeId, onSelectNode }: Props) {
         <MiniMap
           nodeColor={(node: Node) => {
             const nodeType = (node.data as Record<string, unknown>)?.nodeType as string | undefined;
-            return nodeType ? getNodeTypeColor(nodeType) : "#475569";
+            return nodeType ? getNodeTypeColor(nodeType) : "var(--gray-9)";
           }}
-          maskColor="rgba(15, 17, 23, 0.7)"
           className="graph-minimap"
         />
       </ReactFlow>

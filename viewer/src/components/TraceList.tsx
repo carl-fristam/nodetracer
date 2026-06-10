@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
+import { Sun, Moon } from "lucide-react";
 import type { TraceSummary } from "../types/trace";
+import type { AppTheme } from "../App";
 import { formatDuration, formatDate } from "../lib/format";
 import { getTraceAccentColor } from "../lib/colors";
 
@@ -14,6 +16,9 @@ interface Props {
   newCount: number;
   onClearNew: () => void;
   multiSelect: boolean;
+  theme: AppTheme;
+  onToggleTheme: () => void;
+
 }
 
 interface SessionGroup {
@@ -31,6 +36,8 @@ export function TraceList({
   newCount,
   onClearNew,
   multiSelect,
+  theme,
+  onToggleTheme,
 }: Props) {
   const [collapsedSessions, setCollapsedSessions] = useState<Set<string>>(new Set());
   const selectedArray = [...selectedIds];
@@ -78,11 +85,16 @@ export function TraceList({
     <aside className="trace-list">
       <div className="trace-list-header">
         <h2>Traces</h2>
-        {newCount > 0 && (
-          <button className="new-badge" onClick={onClearNew}>
-            {newCount} new
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {newCount > 0 && (
+            <button className="new-badge" onClick={onClearNew}>
+              {newCount} new
+            </button>
+          )}
+          <button className="theme-toggle" onClick={onToggleTheme} title="Toggle theme">
+            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
           </button>
-        )}
+        </div>
       </div>
       {multiSelect && selectedIds.size > 1 && (
         <div className="multi-select-hint">
