@@ -79,13 +79,13 @@ function TreeNode({
       >
         {hasChildren ? (
           <button
-            className="expand-toggle"
+            className={`expand-toggle${expanded ? " expanded" : ""}`}
             onClick={(e) => {
               e.stopPropagation();
               setExpanded(!expanded);
             }}
           >
-            {expanded ? "▼" : "▶"}
+            ›
           </button>
         ) : (
           <span className="expand-placeholder" />

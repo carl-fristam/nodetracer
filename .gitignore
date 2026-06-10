@@ -221,3 +221,12 @@ __marimo__/
 # Temporary docs
 ADAPTER_NOTES.md
 DESIGN_DECISIONS.md
+
+# Traces
+traces/
+
+# Understand-Anything
+.understand-anything/
+
+# Claude Code
+.claude/
