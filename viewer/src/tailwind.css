@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+/* Radix Themes adds .dark to its wrapper element on appearance change */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Point Tailwind color utilities at Radix's adaptive tokens */
+@theme inline {
+  --color-background: var(--gray-2);
+  --color-foreground: var(--gray-12);
+  --color-muted:      var(--gray-3);
+  --color-muted-foreground: var(--gray-9);
+  --color-border:     var(--gray-6);
+  --color-primary:    var(--accent-9);
+  --color-primary-foreground: white;
+}

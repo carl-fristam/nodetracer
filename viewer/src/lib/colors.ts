@@ -51,6 +51,8 @@ interface EdgeStyle {
 }
 
 const EDGE_STYLES: Record<string, EdgeStyle> = {
+  sequence:    { color: "var(--gray-6)",  dashArray: "",    label: "" },
+  caused_by:   { color: "var(--gray-7)",  dashArray: "",    label: "" },
   causal:      { color: "#6366f1", dashArray: "",    label: "causes" },
   causation:   { color: "#6366f1", dashArray: "",    label: "causes" },
   data_flow:   { color: "#06b6d4", dashArray: "4 2", label: "data" },
@@ -61,7 +63,7 @@ const EDGE_STYLES: Record<string, EdgeStyle> = {
   delegation:  { color: "#ec4899", dashArray: "",    label: "delegates" },
 };
 
-const DEFAULT_EDGE_STYLE: EdgeStyle = { color: "#94a3b8", dashArray: "3 3", label: "" };
+const DEFAULT_EDGE_STYLE: EdgeStyle = { color: "var(--gray-8)", dashArray: "3 3", label: "" };
 
 export function getEdgeStyle(edgeType: string): EdgeStyle {
   return EDGE_STYLES[edgeType] ?? DEFAULT_EDGE_STYLE;

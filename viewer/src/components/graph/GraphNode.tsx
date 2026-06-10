@@ -10,6 +10,7 @@ interface GraphNodeData {
   status: NodeStatus;
   durationMs: number | null;
   error: string | null;
+  isRoot?: boolean;
   [key: string]: unknown;
 }
 
@@ -22,7 +23,7 @@ const STATUS_ICONS: Record<NodeStatus, string> = {
 };
 
 function GraphNodeComponent({ data, selected }: NodeProps) {
-  const { label, nodeType, status, durationMs, error } = data as unknown as GraphNodeData;
+  const { label, nodeType, status, durationMs, error, isRoot } = data as unknown as GraphNodeData;
   const typeColor = getNodeTypeColor(nodeType);
   const statusColor = STATUS_COLORS[status] ?? STATUS_COLORS.pending;
   const isFailed = status === "failed";
@@ -31,10 +32,12 @@ function GraphNodeComponent({ data, selected }: NodeProps) {
     <>
       <Handle type="target" position={Position.Top} className="graph-handle" />
       <div
-        className={`graph-node ${selected ? "selected" : ""} ${isFailed ? "failed" : ""}`}
+        className={`graph-node ${selected ? "selected" : ""} ${isFailed ? "failed" : ""} ${isRoot ? "root" : ""}`}
         style={{
-          borderColor: selected ? "var(--accent)" : typeColor,
-          borderWidth: selected ? 2 : 1.5,
+          borderColor: selected ? "var(--accent)" : isRoot ? "var(--text-secondary)" : typeColor,
+          borderWidth: selected ? 2 : isRoot ? 1 : 1.5,
+          borderStyle: isRoot ? "dashed" : "solid",
+          opacity: isRoot ? 0.7 : 1,
         }}
       >
         <div className="graph-node-header">

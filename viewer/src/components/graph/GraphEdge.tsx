@@ -14,7 +14,7 @@ interface GraphEdgeData {
 }
 
 const STRUCTURAL_STYLE = {
-  color: "#475569",
+  color: "var(--gray-7)",
   dashArray: "",
   label: "",
 };
@@ -31,7 +31,8 @@ function GraphEdgeComponent({
   selected,
 }: EdgeProps) {
   const { edgeType, label: customLabel } = (data ?? {}) as GraphEdgeData;
-  const isStructural = edgeType === "structural";
+  const isStructural = edgeType === "structural" || edgeType === "caused_by";
+  const isSequence = edgeType === "sequence";
   const style = isStructural ? STRUCTURAL_STYLE : getEdgeStyle(edgeType);
 
   const [edgePath, labelX, labelY] = getBezierPath({
@@ -52,9 +53,9 @@ function GraphEdgeComponent({
         path={edgePath}
         style={{
           stroke: style.color,
-          strokeWidth: selected ? 2.5 : isStructural ? 1 : 1.5,
+          strokeWidth: selected ? 2.5 : isStructural ? 1 : isSequence ? 1.5 : 1.5,
           strokeDasharray: style.dashArray || undefined,
-          opacity: isStructural ? 0.4 : selected ? 1 : 0.7,
+          opacity: isStructural ? 0.4 : isSequence ? 0.55 : selected ? 1 : 0.7,
         }}
         markerEnd={`url(#marker-${id})`}
       />
