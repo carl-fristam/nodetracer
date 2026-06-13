@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTraceList, useTrace, useMultiTrace } from "./hooks/useTraces";
 import { TraceList } from "./components/TraceList";
 import { TraceTree } from "./components/TraceTree";
@@ -19,12 +20,11 @@ export default function App() {
   const [theme, setTheme] = useState<AppTheme>("dark");
 
   const selectedArray = useMemo(() => [...selectedTraceIds], [selectedTraceIds]);
-  const primaryTraceId = selectedArray[0] ?? null;
 
   const isMultiSelected = selectedArray.length > 1;
 
   const { trace: singleTrace, loading: singleLoading, error: singleError } = useTrace(
-    isMultiSelected ? null : primaryTraceId,
+    isMultiSelected ? null : selectedArray[0] ?? null,
   );
 
   const {
@@ -69,13 +69,10 @@ export default function App() {
     clearNewCount();
   }, [clearNewCount]);
 
-  const isMulti = isMultiSelected;
-
   const activeTrace = isMultiSelected ? merged : singleTrace;
   const loading = isMultiSelected ? multiLoading : singleLoading;
   const traceError = isMultiSelected ? multiError : singleError;
 
-  const totalNodes = activeTrace ? Object.keys(activeTrace.nodes).length : 0;
   const selectedNode = activeTrace && selectedNodeId
     ? activeTrace.nodes[selectedNodeId] ?? null
     : null;
@@ -96,33 +93,47 @@ export default function App() {
         onSelectSession={handleSelectSession}
         newCount={newCount}
         onClearNew={clearNewCount}
-        multiSelect={isMulti}
+        multiSelect={isMultiSelected}
         theme={theme}
         onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
       />
 
       <main className="main-panel">
+        <motion.div
+          className="floating-top-header"
+          animate={{ x: selectedNode ? -404 : 0 }}
+          transition={{ type: "spring", bounce: 0, duration: 0.35 }}
+        >
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
+        </motion.div>
+
         {listError && <div className="error-banner">{listError}</div>}
         {traceError && <div className="error-banner">{traceError}</div>}
 
         {selectedTraceIds.size === 0 && (
           <div className="empty-main">
-            <p>Select a trace from the sidebar to inspect it.</p>
+            <div className="empty-main-inner">
+              <div className="empty-main-icon">⬡</div>
+              <p className="empty-main-title">No trace selected</p>
+              <p className="empty-main-sub">Pick one from the sidebar to start inspecting.</p>
+            </div>
           </div>
         )}
 
-        {loading && <div className="loading">Loading trace…</div>}
+        {loading && !activeTrace && <div className="loading">Loading trace…</div>}
 
-        {activeTrace && !loading && (
-          <>
-            <div className="main-panel-header">
-              <div className="main-panel-title">
-                <h2>{activeTrace.name || activeTrace.trace_id}</h2>
-                <span className="trace-meta">{totalNodes} nodes</span>
-              </div>
-              <ViewToggle mode={viewMode} onChange={setViewMode} />
-            </div>
-
+        {activeTrace && (
+          <div 
+            className="main-panel-workspace"
+            style={{ 
+              flex: 1, 
+              display: 'flex', 
+              flexDirection: 'column',
+              opacity: loading ? 0.6 : 1,
+              transition: 'opacity 0.2s ease-in-out',
+              pointerEvents: loading ? 'none' : 'auto'
+            }}
+          >
             {viewMode === "tree" && (
               <TraceTree
                 trace={activeTrace}
@@ -136,21 +147,34 @@ export default function App() {
                 trace={activeTrace}
                 selectedNodeId={selectedNodeId}
                 onSelectNode={setSelectedNodeId}
+                onDeselect={() => setSelectedNodeId(null)}
                 origins={origins}
                 colorMode={theme}
+                detailOpen={!!selectedNode}
               />
             )}
-          </>
+          </div>
         )}
       </main>
 
-      {selectedNode && activeTrace && (
-        <NodeDetail
-          node={selectedNode}
-          trace={activeTrace}
-          onClose={() => setSelectedNodeId(null)}
-        />
-      )}
+      <AnimatePresence>
+        {selectedNode && activeTrace && (
+          <motion.div
+            key="node-detail"
+            className="node-detail-overlay"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", bounce: 0, duration: 0.35 }}
+          >
+            <NodeDetail
+              node={selectedNode}
+              trace={activeTrace}
+              onClose={() => setSelectedNodeId(null)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Theme>
   );
 }
