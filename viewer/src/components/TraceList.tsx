@@ -1,10 +1,9 @@
 import { useMemo, useState } from "react";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, GitGraph, Search } from "lucide-react";
 import type { TraceSummary } from "../types/trace";
 import type { AppTheme } from "../App";
 import { formatDuration, formatDate } from "../lib/format";
 import { getTraceAccentColor } from "../lib/colors";
-
 const UNGROUPED_KEY = "__ungrouped__";
 
 interface Props {
@@ -18,7 +17,6 @@ interface Props {
   multiSelect: boolean;
   theme: AppTheme;
   onToggleTheme: () => void;
-
 }
 
 interface SessionGroup {
@@ -82,19 +80,35 @@ export function TraceList({
   };
 
   return (
-    <aside className="trace-list">
+    <aside className="trace-list dark">
+      <div className="sidebar-brand">
+        <div className="brand-logo">
+          <GitGraph size={20} className="brand-icon" />
+          <span className="brand-name">NODETRACER</span>
+        </div>
+        <button className="theme-toggle" onClick={onToggleTheme} title="Toggle theme">
+          {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+        </button>
+      </div>
+
+      <div className="sidebar-search">
+        <div className="search-container">
+          <Search size={14} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search traces..."
+            className="search-input"
+          />
+        </div>
+      </div>
+
       <div className="trace-list-header">
         <h2>Traces</h2>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {newCount > 0 && (
-            <button className="new-badge" onClick={onClearNew}>
-              {newCount} new
-            </button>
-          )}
-          <button className="theme-toggle" onClick={onToggleTheme} title="Toggle theme">
-            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+        {newCount > 0 && (
+          <button className="new-badge" onClick={onClearNew}>
+            {newCount} new
           </button>
-        </div>
+        )}
       </div>
       {multiSelect && selectedIds.size > 1 && (
         <div className="multi-select-hint">
@@ -111,7 +125,7 @@ export function TraceList({
 
             return (
               <li key={group.key} className="trace-list-group">
-                {isSession ? (
+                {isSession && (
                   <div
                     className="trace-list-session-header"
                     onClick={() => toggleCollapsed(group.key)}
@@ -140,8 +154,6 @@ export function TraceList({
                       </button>
                     )}
                   </div>
-                ) : (
-                  <div className="trace-list-ungrouped-header">Ungrouped</div>
                 )}
                 {!isCollapsed && (
                   <ul className="trace-list-items">

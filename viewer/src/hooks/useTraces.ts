@@ -53,7 +53,6 @@ export function useTrace(traceId: string | null) {
     }
 
     let cancelled = false;
-    setTrace(null);
     setLoading(true);
     setError(null);
 

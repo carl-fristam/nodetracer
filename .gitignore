@@ -225,6 +225,9 @@ DESIGN_DECISIONS.md
 # Traces
 traces/
 
+# Examples
+examples/
+
 # Understand-Anything
 .understand-anything/
 
